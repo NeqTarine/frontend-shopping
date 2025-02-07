@@ -10,6 +10,29 @@ import { FaShoppingCart, FaChartLine, FaAmazon, FaEbay } from "react-icons/fa";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
+
+API.interceptors.response.use(
+    response => response,
+    async error => {
+        const originalRequest = error.config;
+
+        if (error.response && error.response.status === 429) {
+            // Attendre avant de réessayer
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Réessayer la requête
+            return API(originalRequest);
+        }
+
+        if (error.response && error.response.status === 401) {
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+        }
+
+        return Promise.reject(error);
+    }
+);
+
 // Intercepteur de réponse Axios pour gérer les erreurs 401
 API.interceptors.response.use(
     response => response,
